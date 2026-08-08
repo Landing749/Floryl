@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Pressed — A Private Flower Journal</title>
+<meta name="description" content="A private, offline flower journal. Save flowers you find, keep what you notice, and turn favorites into beautiful posts." />
+<meta name="theme-color" content="#1f3325" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Pressed" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ============ APP SHELL ============ -->
+<div class="app" id="app">
+
+  <!-- ---------- LIBRARY ---------- -->
+  <section class="view" id="view-library" data-view="library">
+    <header class="library-header">
+      <div class="library-header__top">
+        <div class="brand">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40" class="icon-bloom"><use href="#svg-bloom"/></svg>
+          </span>
+          <div class="brand__text">
+            <h1>Pressed</h1>
+            <p class="brand__tagline">a private flower journal</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" id="btn-install-app" aria-label="Install Pressed as an app" hidden>
+            <svg viewBox="0 0 24 24"><use href="#svg-download"/></svg>
+          </button>
+          <button class="icon-btn" id="btn-open-search" aria-label="Search your collection">
+            <svg viewBox="0 0 24 24"><use href="#svg-search"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="search-row" id="search-row" hidden>
+        <svg viewBox="0 0 24 24" class="search-row__icon"><use href="#svg-search"/></svg>
+        <input type="search" id="search-input" placeholder="Search by name, species, or note…" autocomplete="off" />
+        <button class="icon-btn icon-btn--ghost" id="btn-close-search" aria-label="Close search">
+          <svg viewBox="0 0 24 24"><use href="#svg-close"/></svg>
+        </button>
+      </div>
+
+      <div class="library-toolbar" id="library-toolbar">
+        <div class="count-pill" id="flower-count">0 flowers</div>
+        <div class="sort-control">
+          <label for="sort-select" class="sr-only">Sort collection</label>
+          <select id="sort-select">
+            <option value="dateDesc">Newest first</option>
+            <option value="dateAsc">Oldest first</option>
+            <option value="nameAsc">Name, A–Z</option>
+            <option value="nameDesc">Name, Z–A</option>
+          </select>
+          <svg viewBox="0 0 24 24" class="sort-control__chevron"><use href="#svg-chevron"/></svg>
+        </div>
+      </div>
+    </header>
+
+    <div class="library-scroll">
+      <div class="flower-grid" id="flower-grid" role="list"></div>
+
+      <div class="empty-state" id="empty-state" hidden>
+        <svg viewBox="0 0 120 120" class="empty-state__art"><use href="#svg-empty-sprig"/></svg>
+        <h2>Your journal is waiting</h2>
+        <p>Every flower you press here stays only on this device. Add the first one you noticed today.</p>
+        <button class="btn btn--primary" id="btn-empty-add">Add your first flower</button>
+      </div>
+
+      <div class="empty-state" id="no-results-state" hidden>
+        <svg viewBox="0 0 120 120" class="empty-state__art"><use href="#svg-empty-sprig"/></svg>
+        <h2>No flowers match</h2>
+        <p>Try a different name, species, or word from your notes.</p>
+        <button class="btn btn--ghost" id="btn-clear-search">Clear search</button>
+      </div>
+    </div>
+
+    <button class="fab" id="btn-add-flower" aria-label="Add a flower">
+      <svg viewBox="0 0 24 24"><use href="#svg-plus"/></svg>
+    </button>
+  </section>
+
+  <!-- ---------- ADD / EDIT FLOWER ---------- -->
+  <section class="view" id="view-add" data-view="add">
+    <header class="subview-header">
+      <button class="icon-btn" id="btn-add-back" aria-label="Cancel">
+        <svg viewBox="0 0 24 24"><use href="#svg-arrow-back"/></svg>
+      </button>
+      <h2 id="add-title">Add a flower</h2>
+      <button class="text-btn text-btn--primary" id="btn-save-flower">Save</button>
+    </header>
+
+    <form class="add-form" id="add-form">
+      <div class="photo-picker" id="photo-picker">
+        <div class="photo-picker__preview" id="photo-preview">
+          <svg viewBox="0 0 24 24" class="photo-picker__icon"><use href="#svg-camera"/></svg>
+          <p>Add a photo</p>
+        </div>
+        <div class="photo-picker__actions">
+          <button type="button" class="btn btn--soft" id="btn-choose-photo">
+            <svg viewBox="0 0 24 24"><use href="#svg-image"/></svg>
+            Choose photo
+          </button>
+          <button type="button" class="btn btn--soft" id="btn-take-photo">
+            <svg viewBox="0 0 24 24"><use href="#svg-camera"/></svg>
+            Take photo
+          </button>
+        </div>
+        <input type="file" id="file-input-gallery" accept="image/*" hidden />
+        <input type="file" id="file-input-camera" accept="image/*" capture="environment" hidden />
+        <p class="field-hint" id="photo-error" hidden></p>
+      </div>
+
+      <div class="field">
+        <label for="field-name">Common name</label>
+        <input type="text" id="field-name" placeholder="e.g. Rose" maxlength="80" required />
+      </div>
+
+      <div class="field">
+        <label for="field-scientific">Scientific name</label>
+        <input type="text" id="field-scientific" placeholder="e.g. Rosa" maxlength="100" />
+        <p class="field-hint">Optional, but it's what makes this a journal and not just a photo album.</p>
+      </div>
+
+      <div class="field">
+        <label for="field-symbolism">Symbolism</label>
+        <input type="text" id="field-symbolism" placeholder="e.g. Love, beauty, passion" maxlength="140" />
+      </div>
+
+      <div class="field">
+        <label for="field-note">Personal note</label>
+        <textarea id="field-note" rows="4" placeholder="Where did you find it? What made you stop and look?" maxlength="600"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--block" id="btn-save-flower-bottom">Save to journal</button>
+    </form>
+  </section>
+
+  <!-- ---------- FLOWER DETAILS ---------- -->
+  <section class="view" id="view-details" data-view="details">
+    <header class="subview-header subview-header--transparent" id="details-header">
+      <button class="icon-btn icon-btn--on-photo" id="btn-details-back" aria-label="Back to library">
+        <svg viewBox="0 0 24 24"><use href="#svg-arrow-back"/></svg>
+      </button>
+      <span></span>
+      <button class="icon-btn icon-btn--on-photo" id="btn-details-menu" aria-label="More actions">
+        <svg viewBox="0 0 24 24"><use href="#svg-more"/></svg>
+      </button>
+    </header>
+
+    <div class="details-scroll">
+      <div class="details-photo" id="details-photo"></div>
+
+      <div class="details-body">
+        <p class="details-tag" id="details-date">Added —</p>
+        <h1 class="details-name" id="details-name">Flower name</h1>
+        <p class="details-scientific" id="details-scientific"></p>
+
+        <div class="details-block" id="details-symbolism-block">
+          <h3>Symbolism</h3>
+          <p id="details-symbolism"></p>
+        </div>
+
+        <div class="details-block" id="details-note-block">
+          <h3>Personal note</h3>
+          <p id="details-note"></p>
+        </div>
+
+        <div class="details-actions">
+          <button class="btn btn--primary btn--block" id="btn-create-post">
+            <svg viewBox="0 0 24 24"><use href="#svg-post"/></svg>
+            Create a post
+          </button>
+          <div class="details-actions__row">
+            <button class="btn btn--soft btn--block" id="btn-edit-flower">
+              <svg viewBox="0 0 24 24"><use href="#svg-edit"/></svg>
+              Edit
+            </button>
+            <button class="btn btn--danger-ghost btn--block" id="btn-delete-flower">
+              <svg viewBox="0 0 24 24"><use href="#svg-trash"/></svg>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- CREATE POST ---------- -->
+  <section class="view" id="view-post" data-view="post">
+    <header class="subview-header">
+      <button class="icon-btn" id="btn-post-back" aria-label="Back">
+        <svg viewBox="0 0 24 24"><use href="#svg-arrow-back"/></svg>
+      </button>
+      <h2>Create a post</h2>
+      <span style="width:40px"></span>
+    </header>
+
+    <div class="post-scroll">
+      <div class="post-canvas-wrap">
+        <canvas id="post-canvas" width="1080" height="1350"></canvas>
+      </div>
+
+      <div class="template-rail" id="template-rail">
+        <button class="template-chip is-active" data-template="minimal">Minimal Botanical</button>
+        <button class="template-chip" data-template="journal">Botanical Journal</button>
+        <button class="template-chip" data-template="editorial">Editorial</button>
+        <button class="template-chip" data-template="polaroid">Polaroid</button>
+        <button class="template-chip" data-template="simple">Simple</button>
+        <button class="template-chip" data-template="plate">Botanical Plate</button>
+        <button class="template-chip" data-template="postcard">Postcard</button>
+        <button class="template-chip" data-template="quote">Quote</button>
+        <button class="template-chip" data-template="field">Field Guide</button>
+      </div>
+
+      <div class="post-fields">
+        <div class="field">
+          <label for="post-field-name">Common name</label>
+          <input type="text" id="post-field-name" maxlength="80" />
+        </div>
+        <div class="field">
+          <label for="post-field-scientific">Scientific name</label>
+          <input type="text" id="post-field-scientific" maxlength="100" />
+        </div>
+        <div class="field">
+          <label for="post-field-symbolism">Symbolism</label>
+          <input type="text" id="post-field-symbolism" maxlength="140" />
+        </div>
+        <div class="field" id="post-align-field">
+          <label for="post-align">Text position</label>
+          <select id="post-align">
+            <option value="bottom">Bottom</option>
+            <option value="top">Top</option>
+            <option value="center">Centered on photo</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="post-export-actions">
+        <button class="btn btn--soft btn--block" id="btn-download-post">
+          <svg viewBox="0 0 24 24"><use href="#svg-download"/></svg>
+          Save image
+        </button>
+        <button class="btn btn--primary btn--block" id="btn-share-post">
+          <svg viewBox="0 0 24 24"><use href="#svg-share"/></svg>
+          Share
+        </button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ---------- OVERLAYS ---------- -->
+<div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
+
+<div class="action-sheet" id="details-sheet" hidden role="menu">
+  <button class="action-sheet__item" id="sheet-edit" role="menuitem">
+    <svg viewBox="0 0 24 24"><use href="#svg-edit"/></svg> Edit flower
+  </button>
+  <button class="action-sheet__item action-sheet__item--danger" id="sheet-delete" role="menuitem">
+    <svg viewBox="0 0 24 24"><use href="#svg-trash"/></svg> Delete flower
+  </button>
+  <button class="action-sheet__item action-sheet__item--cancel" id="sheet-cancel" role="menuitem">Cancel</button>
+</div>
+
+<div class="dialog-backdrop" id="install-dialog-backdrop" hidden>
+  <div class="dialog" role="dialog" aria-labelledby="install-dialog-title">
+    <h3 id="install-dialog-title">Add Pressed to your Home Screen</h3>
+    <p>Pressed works best installed like an app. In Safari, tap the <strong>Share</strong> icon, then choose <strong>Add to Home Screen</strong>.</p>
+    <div class="dialog__actions">
+      <button class="btn btn--primary btn--block" id="install-dialog-ok">Got it</button>
+    </div>
+  </div>
+</div>
+
+<div class="dialog-backdrop" id="dialog-backdrop" hidden>
+  <div class="dialog" role="alertdialog" aria-labelledby="dialog-title" aria-describedby="dialog-body">
+    <h3 id="dialog-title">Delete this flower?</h3>
+    <p id="dialog-body">This removes it from Pressed on this device only. It will not delete the original photo from your gallery.</p>
+    <div class="dialog__actions">
+      <button class="btn btn--ghost btn--block" id="dialog-cancel">Cancel</button>
+      <button class="btn btn--danger btn--block" id="dialog-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<div class="loading-veil" id="loading-veil" hidden>
+  <div class="loading-veil__sprig">
+    <svg viewBox="0 0 40 40" class="icon-bloom icon-bloom--spin"><use href="#svg-bloom"/></svg>
+  </div>
+</div>
+
+<!-- ---------- SVG SPRITE (all icons + illustrations, no external assets) ---------- -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="svg-bloom" viewBox="0 0 40 40">
+      <circle cx="20" cy="13" r="7"/><circle cx="12" cy="18" r="7"/><circle cx="28" cy="18" r="7"/>
+      <circle cx="14" cy="26" r="7"/><circle cx="26" cy="26" r="7"/>
+      <circle cx="20" cy="20" r="5" fill="var(--ivory)"/>
+      <circle cx="20" cy="20" r="2" fill="currentColor"/>
+      <line x1="20" y1="24" x2="20" y2="36" stroke="currentColor" stroke-width="2"/>
+    </symbol>
+    <symbol id="svg-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><line x1="20" y1="20" x2="15.5" y2="15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="svg-close" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="svg-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="svg-chevron" viewBox="0 0 24 24"><polyline points="7,10 12,15 17,10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="svg-arrow-back" viewBox="0 0 24 24"><polyline points="14,6 8,12 14,18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="svg-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></symbol>
+    <symbol id="svg-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+    <symbol id="svg-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="9" cy="10" r="1.7"/><path d="M4 17l5.5-5 3.5 3.5 2.5-2.5L20 17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+    <symbol id="svg-edit" viewBox="0 0 24 24"><path d="M4 20l1-4.2L15.5 5.3a1.5 1.5 0 0 1 2.1 0l1.1 1.1a1.5 1.5 0 0 1 0 2.1L8.2 19l-4.2 1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="svg-trash" viewBox="0 0 24 24"><path d="M5 7h14M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2M7 7l1 12.5A1.5 1.5 0 0 0 9.5 21h5a1.5 1.5 0 0 0 1.5-1.5L17 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+    <symbol id="svg-post" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="9.5" r="1.6"/><path d="M5 16l4-4 3 3 3.5-3.5L19 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="svg-download" viewBox="0 0 24 24"><path d="M12 4v11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><polyline points="7.5,11 12,15.5 16.5,11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="5" y1="20" x2="19" y2="20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="svg-share" viewBox="0 0 24 24"><circle cx="18" cy="6" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="12" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="18" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="8.1" y1="10.8" x2="15.9" y2="7.2" stroke="currentColor" stroke-width="1.6"/><line x1="8.1" y1="13.2" x2="15.9" y2="16.8" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="svg-empty-sprig" viewBox="0 0 120 120">
+      <path d="M60 100 V45" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M60 70c-10-4-18-2-24 6 10 6 18 4 24-6z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <path d="M60 82c10-4 18-2 24 6-10 6-18 4-24-6z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <g fill="none" stroke="currentColor" stroke-width="1.8">
+        <ellipse cx="60" cy="24" rx="10" ry="15"/>
+        <ellipse cx="60" cy="24" rx="10" ry="15" transform="rotate(72 60 24)"/>
+        <ellipse cx="60" cy="24" rx="10" ry="15" transform="rotate(144 60 24)"/>
+        <ellipse cx="60" cy="24" rx="10" ry="15" transform="rotate(216 60 24)"/>
+        <ellipse cx="60" cy="24" rx="10" ry="15" transform="rotate(288 60 24)"/>
+      </g>
+      <circle cx="60" cy="24" r="4" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script src="db.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
