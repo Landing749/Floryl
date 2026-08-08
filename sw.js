@@ -4,7 +4,7 @@
  * untouched by this file.
  */
 
-const CACHE_VERSION = 'pressed-v1';
+const CACHE_VERSION = 'pressed-v2';
 const APP_SHELL = [
   './',
   './index.html',

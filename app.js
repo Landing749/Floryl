@@ -48,8 +48,16 @@
     toastTimer = setTimeout(() => { el.hidden = true; }, 3200);
   }
 
+  let loadingWatchdog = null;
   function setLoading(isLoading) {
     $('#loading-veil').hidden = !isLoading;
+    clearTimeout(loadingWatchdog);
+    if (isLoading) {
+      loadingWatchdog = setTimeout(() => {
+        $('#loading-veil').hidden = true;
+        toast('That took longer than expected. Please try again.', { error: true });
+      }, 8000);
+    }
   }
 
   function showDialog({ title, body, confirmLabel = 'Delete', danger = true, onConfirm }) {
@@ -525,26 +533,19 @@
   });
   $('#btn-delete-flower').addEventListener('click', () => confirmDeleteCurrent());
 
-  function confirmDeleteCurrent() {
+  async function confirmDeleteCurrent() {
     if (!currentFlower) return;
-    showDialog({
-      title: `Delete “${currentFlower.name}”?`,
-      body: 'This removes it from Pressed on this device only. It will not delete the original photo from your gallery.',
-      confirmLabel: 'Delete',
-      danger: true,
-      onConfirm: async () => {
-        setLoading(true);
-        try {
-          await DB.deleteFlower(currentFlower.id);
-          setLoading(false);
-          toast('Flower deleted from your journal.');
-          navigate('/library');
-        } catch (err) {
-          setLoading(false);
-          toast(friendlyError(err, 'That flower could not be deleted.'), { error: true });
-        }
-      },
-    });
+    const id = currentFlower.id;
+    setLoading(true);
+    try {
+      await DB.deleteFlower(id);
+      setLoading(false);
+      toast('Flower deleted from your journal.');
+      navigate('/library');
+    } catch (err) {
+      setLoading(false);
+      toast(friendlyError(err, 'That flower could not be deleted.'), { error: true });
+    }
   }
 
   // action sheet (mobile "more" menu)
@@ -1179,14 +1180,10 @@
         installBtn.disabled = false;
       }
     } else if (isIOS()) {
-      $('#install-dialog-backdrop').hidden = false;
+      toast('In Safari, tap the Share icon, then choose "Add to Home Screen."');
     } else {
       toast('This browser can install Pressed from its menu — look for "Install app" or "Add to Home Screen."');
     }
-  });
-
-  $('#install-dialog-ok').addEventListener('click', () => {
-    $('#install-dialog-backdrop').hidden = true;
   });
 
   /* ---------------------------------------------------------
@@ -1198,6 +1195,16 @@
         // Offline caching just won't be available this session; the app
         // still works normally since all data lives in IndexedDB.
       });
+    });
+
+    // When a new service worker takes over (i.e. Pressed was updated),
+    // reload once so the person isn't stuck looking at stale cached
+    // files. Guarded so it can only happen a single time per page load.
+    let hasReloadedForUpdate = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (hasReloadedForUpdate) return;
+      hasReloadedForUpdate = true;
+      window.location.reload();
     });
   }
 

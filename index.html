@@ -10,6 +10,7 @@
 <link rel="icon" href="icons/icon-192.png" />
 <link rel="apple-touch-icon" href="icons/icon-192.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Pressed" />
 <link rel="stylesheet" href="styles.css" />
@@ -69,14 +70,18 @@
       <div class="flower-grid" id="flower-grid" role="list"></div>
 
       <div class="empty-state" id="empty-state" hidden>
-        <svg viewBox="0 0 120 120" class="empty-state__art"><use href="#svg-empty-sprig"/></svg>
+        <div class="empty-state__art-ring">
+          <svg viewBox="0 0 120 120" class="empty-state__art"><use href="#svg-empty-sprig"/></svg>
+        </div>
         <h2>Your journal is waiting</h2>
         <p>Every flower you press here stays only on this device. Add the first one you noticed today.</p>
         <button class="btn btn--primary" id="btn-empty-add">Add your first flower</button>
       </div>
 
       <div class="empty-state" id="no-results-state" hidden>
-        <svg viewBox="0 0 120 120" class="empty-state__art"><use href="#svg-empty-sprig"/></svg>
+        <div class="empty-state__art-ring">
+          <svg viewBox="0 0 120 120" class="empty-state__art"><use href="#svg-empty-sprig"/></svg>
+        </div>
         <h2>No flowers match</h2>
         <p>Try a different name, species, or word from your notes.</p>
         <button class="btn btn--ghost" id="btn-clear-search">Clear search</button>
@@ -160,7 +165,7 @@
       <div class="details-photo" id="details-photo"></div>
 
       <div class="details-body">
-        <p class="details-tag" id="details-date">Added —</p>
+        <p class="details-tag ticket" id="details-date">Added —</p>
         <h1 class="details-name" id="details-name">Flower name</h1>
         <p class="details-scientific" id="details-scientific"></p>
 
@@ -270,16 +275,6 @@
     <svg viewBox="0 0 24 24"><use href="#svg-trash"/></svg> Delete flower
   </button>
   <button class="action-sheet__item action-sheet__item--cancel" id="sheet-cancel" role="menuitem">Cancel</button>
-</div>
-
-<div class="dialog-backdrop" id="install-dialog-backdrop" hidden>
-  <div class="dialog" role="dialog" aria-labelledby="install-dialog-title">
-    <h3 id="install-dialog-title">Add Pressed to your Home Screen</h3>
-    <p>Pressed works best installed like an app. In Safari, tap the <strong>Share</strong> icon, then choose <strong>Add to Home Screen</strong>.</p>
-    <div class="dialog__actions">
-      <button class="btn btn--primary btn--block" id="install-dialog-ok">Got it</button>
-    </div>
-  </div>
 </div>
 
 <div class="dialog-backdrop" id="dialog-backdrop" hidden>

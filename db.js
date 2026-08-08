@@ -30,7 +30,30 @@ function openDB() {
       return;
     }
 
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    let settled = false;
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(watchdog);
+      fn(value);
+    };
+
+    // Some private-browsing modes and sandboxed embeds never fire any
+    // event on the open request. Without this, the app would show a
+    // loading state forever with no way out.
+    const watchdog = setTimeout(() => {
+      dbPromise = null; // let a later attempt (e.g. after reload) retry
+      finish(reject, new DBError('Local storage is taking too long to respond. If you\u2019re in a private/incognito window or an embedded preview, your browser may be restricting storage \u2014 try opening Pressed in a regular tab.'));
+    }, 7000);
+
+    let request;
+    try {
+      request = indexedDB.open(DB_NAME, DB_VERSION);
+    } catch (err) {
+      dbPromise = null;
+      finish(reject, new DBError('Pressed could not open local storage in this browser context.', err));
+      return;
+    }
 
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
@@ -50,14 +73,16 @@ function openDB() {
       }
     };
 
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () => finish(resolve, request.result);
 
     request.onerror = () => {
-      reject(new DBError('Pressed could not open its local storage. Reloading the app sometimes fixes this.', request.error));
+      dbPromise = null;
+      finish(reject, new DBError('Pressed could not open its local storage. Reloading the app sometimes fixes this.', request.error));
     };
 
     request.onblocked = () => {
-      reject(new DBError('Local storage is in use by another tab. Close other tabs running Pressed and try again.'));
+      dbPromise = null;
+      finish(reject, new DBError('Local storage is in use by another tab. Close other tabs running Pressed and try again.'));
     };
   });
 
